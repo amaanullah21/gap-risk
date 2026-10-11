@@ -9,13 +9,17 @@
 
 ---
 
+![gap-risk-light](https://raw.githubusercontent.com/amaanullah21/gap-risk/refs/heads/main/gap-risk-light.png)
+![gap-risk-dark](https://raw.githubusercontent.com/amaanullah21/gap-risk/refs/heads/main/gap-risk-dark.png)
+
+
 ## 🚀 Overview
 
 **DeskGap Risk Analytics** is an advanced, high-performance web application designed to model and visualize the weekend gap risk faced by Forex and commodity trading desks holding unhedged spot positions over the weekend. 
 
 Because market liquidity dries up and geopolitical headlines or macroeconomic releases can cause severe weekend gaps upon Monday's open, trading desks often utilize vanilla options (Puts/Calls) to protect their portfolios. This tool combines a **Black–Scholes pricing engine**, **Greeks calculator**, **dynamic payoff charting**, and a **multi-scenario stress matrix** into a zero-dependency, single-interface web utility.
 
-🔗 **[Launch DeskGap Risk Analytics Live](https://hafzan.pages.dev/)**
+🔗 **[Launch DeskGap Risk Analytics Live](https://amaanullah21.github.io/gap-risk/)**
 
 ---
 
