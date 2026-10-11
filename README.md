@@ -59,7 +59,3 @@ Because market liquidity dries up and geopolitical headlines or macroeconomic re
 - Portfolio / Live Tool: [hafzan.pages.dev](https://hafzan.pages.dev/)  
 
 ---
-
-## 📄 License
-
-This project is open-source and available under the [MIT License](LICENSE).
