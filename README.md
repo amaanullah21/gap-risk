@@ -10,6 +10,9 @@
 ---
 
 ![gap-risk-light](https://raw.githubusercontent.com/amaanullah21/gap-risk/refs/heads/main/gap-risk-light.png)
+
+---
+
 ![gap-risk-dark](https://raw.githubusercontent.com/amaanullah21/gap-risk/refs/heads/main/gap-risk-dark.png)
 
 
