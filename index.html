@@ -1,0 +1,352 @@
+
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeskGap Risk Analytics</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+  color-scheme: light;
+  --bg:#f4f7f9; --panel:#fff; --sidebar:#fcfcfc; --input:#fff;
+  --text:#333; --dim:#666; --border:#d1d9e0; --accent:#004a99;
+  --accent-soft:rgba(0,74,153,.06); --success:#28a745;
+  --danger:#d9534f; --warning:#f39c12; --muted:#f4f7f9;
+}
+[data-theme="dark"] {
+  color-scheme:dark;
+  --bg:#0d1117; --panel:#161b22; --sidebar:#0d1117; --input:#0d1117;
+  --text:#c9d1d9; --dim:#8b949e; --border:#30363d; --accent:#58a6ff;
+  --accent-soft:rgba(88,166,255,.08); --success:#3fb950;
+  --danger:#f85149; --warning:#d29922; --muted:#0d1117;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:13px Arial,Helvetica,sans-serif;transition:background .2s,color .2s}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.app{width:min(1500px,calc(100% - 32px));margin:18px auto;background:var(--panel);border:1px solid var(--border);border-radius:7px;overflow:hidden;box-shadow:0 4px 12px #0000000c}
+header{padding:15px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:18px;background:var(--sidebar)}
+.brand h1{font-size:18px;letter-spacing:.8px;text-transform:uppercase;color:var(--accent);margin:0}
+.brand p{font-size:11px;color:var(--dim);margin:5px 0 0}
+.brand a,footer a{color:var(--accent);text-decoration:none;font-weight:bold}
+.header-actions{display:flex;gap:7px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.preset-label{font-size:10px;color:var(--dim);font-weight:bold;text-transform:uppercase}
+.btn,.mode-toggle{border:1px solid var(--border);border-radius:4px;padding:7px 10px;background:var(--bg);color:var(--text);font-size:11px;font-weight:bold}
+.btn:hover,.mode-toggle:hover{border-color:var(--accent);color:var(--accent)}
+.notice{margin:12px 16px 0;padding:9px 12px;border:1px solid var(--border);background:var(--accent-soft);color:var(--dim);border-radius:4px;font-size:10px;line-height:1.5}
+.layout{display:grid;grid-template-columns:350px minmax(0,1fr);min-height:500px}
+.sidebar{padding:18px;background:var(--sidebar);border-right:1px solid var(--border)}
+main{padding:20px;min-width:0}
+.section,.panel{border:1px solid var(--border);border-radius:5px;background:var(--panel);margin-bottom:14px;overflow:hidden}
+.section-head{padding:11px 13px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.section-head h2,.section-head h3,.panel-title{font-size:12px;text-transform:uppercase;letter-spacing:.5px;margin:0;color:var(--text)}
+.section-head small{font-size:10px;color:var(--dim)}
+.section-body,.panel-inner{padding:13px}
+label{display:block;font-size:10px;font-weight:bold;text-transform:uppercase;color:var(--dim);margin-bottom:5px;letter-spacing:.2px}
+.field{margin-bottom:12px}.field:last-child{margin-bottom:0}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+input:not([type=range]),select{width:100%;padding:8px;border:1px solid var(--border);border-radius:4px;background:var(--input);color:var(--text);min-width:0}
+input[type=number]{font-family:Consolas,"Courier New",monospace;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.readout{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 10px;background:var(--muted);border:1px solid var(--border);border-radius:4px;font-size:11px}
+.readout strong{font:bold 12px Consolas,"Courier New",monospace;color:var(--accent)}
+.help{font-size:10px;line-height:1.5;color:var(--dim);margin:8px 0 0}
+.subtle{font-size:11px;color:var(--dim);margin:5px 0 0}
+.sizing-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.metric,.kpi{border:1px solid var(--border);border-radius:5px;padding:12px;min-width:0;background:var(--panel)}
+.metric-label{font-size:10px;color:var(--dim);font-weight:bold;text-transform:uppercase;letter-spacing:.35px;line-height:1.4}
+.metric-value{font:bold 20px Consolas,"Courier New",monospace;margin-top:7px;overflow-wrap:anywhere}
+.metric-note{font-size:10px;color:var(--dim);margin-top:6px;line-height:1.4}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.kpi{border-top:3px solid var(--border)}
+.kpi .metric-value{font-size:17px}
+.kpi.blue{border-top-color:var(--accent)}.kpi.green{border-top-color:var(--success)}
+.kpi.red{border-top-color:var(--danger)}.kpi.gold{border-top-color:var(--warning)}
+.greeks{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.greek{padding:12px 7px;text-align:center;background:var(--muted);border:1px solid var(--border);border-radius:4px;min-width:0}
+.greek .metric-value{font-size:16px}
+.chart-wrap{height:310px;position:relative}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:11px;white-space:nowrap}
+th,td{padding:9px 10px;border-bottom:1px solid var(--border);text-align:left}
+th{background:var(--muted);color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:.2px}
+td.num,th.num{text-align:right;font-family:Consolas,"Courier New",monospace}
+tbody tr:hover{background:var(--accent-soft)}
+footer{padding:16px;text-align:center;font-size:11px;color:var(--dim);border-top:1px solid var(--border);background:var(--sidebar)}
+footer a{margin-left:8px}footer a:hover{text-decoration:underline}
+.positive{color:var(--success)!important}.negative{color:var(--danger)!important}.accent{color:var(--accent)!important}
+@media(max-width:1000px){.layout{grid-template-columns:310px minmax(0,1fr)}.sizing-grid,.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.greeks{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.app{width:100%;margin:0;border-radius:0;border-left:0;border-right:0}.layout{grid-template-columns:1fr}.sidebar{border-right:0;border-bottom:1px solid var(--border)}header{align-items:flex-start;flex-direction:column;padding:14px}.header-actions{justify-content:flex-start}.notice{margin:10px 10px 0}main{padding:12px}.sidebar{padding:12px}.chart-wrap{height:260px}.greeks{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="brand">
+    <h1>DeskGap Risk Analytics</h1>
+    <p>Forex Desk Weekend Options Hedging &amp; Gap Stress Model by
+      <a href="https://hafzan.pages.dev/" target="_blank" rel="noopener noreferrer">Amaanullah Bhatti</a>
+    </p>
+  </div>
+  <div class="header-actions">
+    <span class="preset-label">Asset presets</span>
+    <button class="btn" onclick="loadPreset('XAUUSD')">Gold</button>
+    <button class="btn" onclick="loadPreset('EURUSD')">EUR/USD</button>
+    <button class="btn" onclick="loadPreset('GBPUSD')">GBP/USD</button>
+    <button class="btn" onclick="loadPreset('USDJPY')">USD/JPY</button>
+    <button class="btn" onclick="loadPreset('BTCUSD')">BTC/USD</button>
+    <button class="mode-toggle" id="themeToggle" onclick="toggleTheme()">DARK MODE</button>
+  </div>
+</header>
+
+<div class="notice">INDICATIVE SCENARIO ANALYSIS · NOT CONNECTED TO LIVE OPTION-CHAIN QUOTES OR BROKER EXECUTION</div>
+
+<div class="layout">
+<aside class="sidebar">
+  <section class="section">
+    <div class="section-head"><h2>1. Broker Desk Exposure</h2><small>Unhedged spot</small></div>
+    <div class="section-body">
+      <div class="field"><label for="symbolInput">Symbol / asset name</label><input id="symbolInput" value="XAU/USD (Gold)"></div>
+      <div class="grid2">
+        <div class="field"><label for="exposureType">Net desk position</label><select id="exposureType" onchange="autoConfigureHedge();calculateAll()"><option value="SHORT" selected>Net Short (Sell)</option><option value="LONG">Net Long (Buy)</option></select></div>
+        <div class="field"><label for="lotSize">Total lot size</label><input type="number" id="lotSize" value="50" min="0" step="0.1" oninput="calculateAll()"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="contractSize">Contract size (units/lot)</label><input type="number" id="contractSize" value="100" min="0" step="1" oninput="calculateAll()"></div>
+        <div class="field"><label for="spotPrice">Current spot price ($)</label><input type="number" id="spotPrice" value="2650" step="0.01" oninput="syncStrikeWithSpot();calculateAll()"></div>
+      </div>
+      <div class="readout"><span>Total net units</span><strong id="totalUnitsDisplay">5,000 units</strong></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><h2>2. Options Hedge Strategy</h2><small>Black–Scholes</small></div>
+    <div class="section-body">
+      <div class="grid2">
+        <div class="field"><label for="optionType">Hedge option type</label><select id="optionType" onchange="calculateAll()"><option value="CALL" selected>Long Call</option><option value="PUT">Long Put</option></select></div>
+        <div class="field"><label for="strikePrice">Strike price ($)</label><input type="number" id="strikePrice" value="2650" step="0.01" oninput="calculateAll()"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label for="dte">DTE (days)</label><input type="number" id="dte" value="3" min="0" step="0.5" oninput="calculateAll()"></div>
+        <div class="field"><label for="iv">Implied vol (%)</label><input type="number" id="iv" value="18.5" min="0" step="0.1" oninput="calculateAll()"></div>
+        <div class="field"><label for="riskFreeRate">Risk-free (%)</label><input type="number" id="riskFreeRate" value="4.5" step="0.1" oninput="calculateAll()"></div>
+      </div>
+      <div class="field">
+        <label for="optionPremium">Premium paid per unit ($)</label>
+        <input type="number" id="optionPremium" value="16.25" step="0.01" oninput="calculateAll()">
+        <button class="btn" style="margin-top:7px" onclick="autoCalcTheoreticalPremium()">Calculate Black–Scholes premium</button>
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="optionContractsInput">Option contracts to buy</label><input type="number" id="optionContractsInput" value="10" min="0" step="1" oninput="calculateAll()"></div>
+        <div class="field"><label for="optionContractSize">Option multiplier (units/contract)</label><input type="number" id="optionContractSize" value="100" min="0" step="1" oninput="calculateAll()"></div>
+      </div>
+      <p class="help">Quantity × multiplier determines premium outlay, option P&amp;L, delta coverage and residual exposure. Confirm actual contract specifications and quote currency.</p>
+      <div class="readout" style="margin-top:10px"><span>BS theoretical value</span><strong id="bsTheoreticalPriceDisplay">$16.25</strong></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><h2>3. Market Gap Scenario</h2><small>Market open</small></div>
+    <div class="section-body">
+      <div class="field">
+        <label for="gapPercentSlider">Target gap shift <strong id="gapPercentDisplay" class="accent">+1.50%</strong></label>
+        <input type="range" id="gapPercentSlider" min="-8" max="8" step="0.1" value="1.5" oninput="syncGapFromSlider()">
+      </div>
+      <div class="grid2">
+        <div class="field"><label for="targetPrice">Target open price ($)</label><input type="number" id="targetPrice" value="2689.75" step="0.01" oninput="syncGapFromTargetPrice()"></div>
+        <div class="field"><label for="elapsedDays">Elapsed days</label><input type="number" id="elapsedDays" value="2" min="0" max="7" step="0.5" oninput="calculateAll()"></div>
+      </div>
+      <div class="field"><label for="ivShift">Open volatility shift (IV percentage points)</label><input type="number" id="ivShift" value="2" step="0.5" oninput="calculateAll()"><p class="help">Positive values model volatility expansion; negative values model volatility crush.</p></div>
+    </div>
+  </section>
+</aside>
+
+<main>
+  <section class="panel">
+    <div class="panel-inner">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+        <div><h2 class="panel-title">Hedge sizing / execution ticket</h2><p class="subtle">Uses your selected option quantity and current inputs.</p></div>
+        <span class="subtle" style="border:1px solid var(--border);padding:6px 8px">MODEL · NOT LIVE QUOTES</span>
+      </div>
+      <div class="sizing-grid">
+        <div class="metric"><div class="metric-label">Options to buy</div><div class="metric-value accent" id="recommendedContracts">—</div><div class="metric-note" id="recommendedOptionSide">Long call / put</div></div>
+        <div class="metric"><div class="metric-label">Delta hedge coverage</div><div class="metric-value" id="deltaCoverageDisplay">—</div><div class="metric-note">Based on selected quantity</div></div>
+        <div class="metric"><div class="metric-label">Estimated premium cost</div><div class="metric-value" id="estimatedHedgeCost">—</div><div class="metric-note">Premium × multiplier × quantity</div></div>
+        <div class="metric"><div class="metric-label">Residual net delta</div><div class="metric-value" id="residualNetDelta">—</div><div class="metric-note">Underlying-equivalent units</div></div>
+      </div>
+      <p class="help" id="hedgeSizingNote" style="border-top:1px solid var(--border);padding-top:10px;margin-top:12px">Black–Scholes delta is an estimate, not a live hedge quote.</p>
+    </div>
+  </section>
+
+  <div class="kpi-grid">
+    <div class="kpi red"><div class="metric-label">Unhedged gap P&amp;L</div><div class="metric-value negative" id="kpiUnhedgedPnL">—</div><div class="metric-note">Raw desk exposure P&amp;L</div></div>
+    <div class="kpi blue"><div class="metric-label">Option hedge P&amp;L</div><div class="metric-value" id="kpiOptionPnL">—</div><div class="metric-note" id="kpiOptionCost">Total outlay: —</div></div>
+    <div class="kpi gold"><div class="metric-label">Net hedged P&amp;L</div><div class="metric-value" id="kpiNetPnL">—</div><div class="metric-note">Combined scenario P&amp;L</div></div>
+    <div class="kpi green"><div class="metric-label">Hedge efficiency</div><div class="metric-value" id="kpiHedgeEfficiency">—</div><div class="metric-note" id="kpiCoveredText">Loss mitigation ratio</div></div>
+  </div>
+
+  <section class="panel" style="margin-top:16px">
+    <div class="section-head"><h3>Option Valuation &amp; Greeks Engine</h3><small>Entry Greeks / target valuation</small></div>
+    <div class="panel-inner">
+      <div class="readout" style="margin-bottom:12px"><span>New option value at target</span><strong id="newOptionValueDisplay">—</strong></div>
+      <div class="greeks">
+        <div class="greek"><div class="metric-label">Delta (Δ)</div><div class="metric-value" id="greekDelta">—</div><div class="metric-note">Per $1 spot shift</div></div>
+        <div class="greek"><div class="metric-label">Gamma (Γ)</div><div class="metric-value" id="greekGamma">—</div><div class="metric-note">Delta acceleration</div></div>
+        <div class="greek"><div class="metric-label">Vega (ν)</div><div class="metric-value" id="greekVega">—</div><div class="metric-note">Per +1 vol point</div></div>
+        <div class="greek"><div class="metric-label">Theta (Θ)</div><div class="metric-value" id="greekTheta">—</div><div class="metric-note">Time decay / day</div></div>
+        <div class="greek"><div class="metric-label">Net desk delta</div><div class="metric-value accent" id="netPortfolioDelta">—</div><div class="metric-note">Underlying-equivalent units</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="section-head"><div><h3>Weekend Gap Payoff Profile</h3><p class="subtle">Unhedged spot vs option hedge vs net portfolio P&amp;L</p></div></div>
+    <div class="panel-inner"><div class="chart-wrap"><canvas id="payoffChart"></canvas></div></div>
+  </section>
+
+  <section class="panel">
+    <div class="section-head"><h3>Gap Stress &amp; Sensitivity Matrix</h3><small>Multi-scenario stress test</small></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Gap shift</th><th>Open price</th><th class="num">Unhedged P&amp;L</th><th class="num">Option P&amp;L (base IV)</th><th class="num">Net P&amp;L (base)</th><th class="num">Net P&amp;L (+20% IV)</th></tr></thead>
+        <tbody id="sensitivityTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+</div>
+
+<footer>© 2026 Amaanullah Bhatti <span style="padding:0 8px;color:var(--border)">|</span><a href="https://hafzan.pages.dev/" target="_blank" rel="noopener noreferrer">hafzan.pages.dev</a></footer>
+</div>
+
+<script>
+function CND(x){
+ const a1=.319381530,a2=-.356563782,a3=1.781477937,a4=-1.821255978,a5=1.330274429,L=Math.abs(x),k=1/(1+.2316419*L);
+ const c=1-1/Math.sqrt(2*Math.PI)*Math.exp(-L*L/2)*(a1*k+a2*k**2+a3*k**3+a4*k**4+a5*k**5);
+ return x<0?1-c:c;
+}
+function ND(x){return Math.exp(-.5*x*x)/Math.sqrt(2*Math.PI)}
+function blackScholes(type,S,K,T,r,sigma){
+ if(!(S>0&&K>0)||!Number.isFinite(S+K))return{price:0,delta:0,gamma:0,vega:0,theta:0};
+ if(T<=.00001){
+  const intrinsic=type==='CALL'?Math.max(0,S-K):Math.max(0,K-S);
+  const delta=type==='CALL'?(S>K?1:0):(S<K?-1:0);
+  return{price:intrinsic,delta,gamma:0,vega:0,theta:0};
+ }
+ sigma=Math.max(.0001,sigma);
+ const rootT=Math.sqrt(T),d1=(Math.log(S/K)+(r+sigma*sigma/2)*T)/(sigma*rootT),d2=d1-sigma*rootT;
+ let price,delta,thetaYearly;
+ if(type==='CALL'){price=S*CND(d1)-K*Math.exp(-r*T)*CND(d2);delta=CND(d1);thetaYearly=-(S*ND(d1)*sigma)/(2*rootT)-r*K*Math.exp(-r*T)*CND(d2)}
+ else{price=K*Math.exp(-r*T)*CND(-d2)-S*CND(-d1);delta=CND(d1)-1;thetaYearly=-(S*ND(d1)*sigma)/(2*rootT)+r*K*Math.exp(-r*T)*CND(-d2)}
+ return{price:Math.max(0,price),delta,gamma:ND(d1)/(S*sigma*rootT),vega:S*ND(d1)*rootT/100,theta:thetaYearly/365};
+}
+let chartInstance=null;
+function val(id){return parseFloat(document.getElementById(id).value)}
+function autoConfigureHedge(){document.getElementById('optionType').value=document.getElementById('exposureType').value==='SHORT'?'CALL':'PUT'}
+function syncStrikeWithSpot(){const s=val('spotPrice');if(s>0)document.getElementById('strikePrice').value=s.toFixed(2)}
+function autoCalcTheoreticalPremium(){
+ const bs=blackScholes(document.getElementById('optionType').value,val('spotPrice'),val('strikePrice'),Math.max(0,val('dte'))/365,val('riskFreeRate')/100,Math.max(.01,val('iv'))/100);
+ document.getElementById('optionPremium').value=bs.price.toFixed(4);calculateAll();
+}
+function syncGapFromSlider(){
+ const gap=val('gapPercentSlider'),spot=val('spotPrice'),target=spot*(1+gap/100);
+ document.getElementById('targetPrice').value=target.toFixed(2);
+ document.getElementById('gapPercentDisplay').textContent=(gap>=0?'+':'')+gap.toFixed(2)+'%';
+ calculateAll();
+}
+function syncGapFromTargetPrice(){
+ const s=val('spotPrice'),t=val('targetPrice');
+ if(s>0){const gap=(t-s)/s*100;document.getElementById('gapPercentSlider').value=Math.max(-8,Math.min(8,gap));document.getElementById('gapPercentDisplay').textContent=(gap>=0?'+':'')+gap.toFixed(2)+'%'}
+ calculateAll();
+}
+function money(v){return(v>=0?'+':'−')+'$'+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function number(v,d=2){return Number(v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d})}
+function loadPreset(symbol){
+ const presets={
+  XAUUSD:{name:'XAU/USD (Gold)',dir:'SHORT',lots:50,contract:100,spot:2650,days:3,iv:18.5,gap:1.5},
+  EURUSD:{name:'EUR/USD',dir:'SHORT',lots:100,contract:100000,spot:1.085,days:3,iv:7.5,gap:.8},
+  GBPUSD:{name:'GBP/USD',dir:'LONG',lots:80,contract:100000,spot:1.298,days:3,iv:8.8,gap:-1},
+  USDJPY:{name:'USD/JPY',dir:'SHORT',lots:60,contract:100000,spot:149.5,days:3,iv:11.2,gap:1.2},
+  BTCUSD:{name:'BTC/USD (Bitcoin)',dir:'SHORT',lots:20,contract:1,spot:62500,days:3,iv:52,gap:4}
+ };
+ const p=presets[symbol];if(!p)return;
+ document.getElementById('symbolInput').value=p.name;document.getElementById('exposureType').value=p.dir;
+ document.getElementById('lotSize').value=p.lots;document.getElementById('contractSize').value=p.contract;
+ document.getElementById('spotPrice').value=p.spot;document.getElementById('strikePrice').value=p.spot;
+ document.getElementById('dte').value=p.days;document.getElementById('iv').value=p.iv;
+ document.getElementById('gapPercentSlider').value=p.gap;autoConfigureHedge();syncGapFromSlider();autoCalcTheoreticalPremium();
+}
+function setText(id,text){document.getElementById(id).textContent=text}
+function colorValue(el,value){el.classList.remove('positive','negative');el.classList.add(value>=0?'positive':'negative')}
+function calculateAll(){
+ const exposure=document.getElementById('exposureType').value,optionType=document.getElementById('optionType').value;
+ const lots=Math.max(0,val('lotSize')||0),contract=Math.max(0,val('contractSize')||0),units=lots*contract;
+ const spot=val('spotPrice'),strike=val('strikePrice'),days=Math.max(0,val('dte')||0),iv=Math.max(0,val('iv')||0),r=(val('riskFreeRate')||0)/100,premium=Math.max(0,val('optionPremium')||0);
+ const target=val('targetPrice'),elapsed=Math.max(0,val('elapsedDays')||0),ivShift=val('ivShift')||0;
+ if(!(spot>0&&strike>0&&target>=0))return;
+ setText('totalUnitsDisplay',number(units,2)+' units');
+ const bsEntry=blackScholes(optionType,spot,strike,days/365,r,Math.max(.0001,iv/100));
+ setText('bsTheoreticalPriceDisplay','$'+bsEntry.price.toFixed(4));
+ const remaining=Math.max(0,days-elapsed),Tgap=remaining/365,sigmaGap=Math.max(.001,(iv+ivShift)/100);
+ const bsTarget=blackScholes(optionType,Math.max(.000001,target),strike,Tgap,r,sigmaGap),newValue=bsTarget.price;
+ setText('newOptionValueDisplay','$'+newValue.toFixed(4)+' / underlying unit');
+ const unhedged=exposure==='SHORT'?(spot-target)*units:(target-spot)*units;
+ const optMult=Math.max(0,val('optionContractSize')||0),optContracts=Math.max(0,Math.floor(val('optionContractsInput')||0)),optionUnits=optContracts*optMult;
+ const optionDelta=bsEntry.delta*optionUnits,spotDelta=exposure==='LONG'?units:-units,netDelta=spotDelta+optionDelta;
+ const coverage=units>0?Math.abs(optionDelta)/units*100:0,cost=premium*optionUnits,optPnL=(newValue-premium)*optionUnits,netPnL=unhedged+optPnL;
+ setText('recommendedContracts',optContracts.toLocaleString('en-US'));
+ setText('recommendedOptionSide',optionType==='CALL'?'BUY CALLS':'BUY PUTS');
+ setText('deltaCoverageDisplay',coverage.toFixed(1)+'%');setText('estimatedHedgeCost','$'+number(cost));setText('residualNetDelta',(netDelta>=0?'+':'')+number(netDelta,0)+' units');
+ const matches=(exposure==='SHORT'&&optionType==='CALL')||(exposure==='LONG'&&optionType==='PUT');
+ setText('hedgeSizingNote',!matches?'WARNING: Selected option type may not hedge the exposure direction. Net-short spot typically uses long calls; net-long spot typically uses long puts.':Math.abs(bsEntry.delta)<.05?'WARNING: Option delta is very small and may provide limited immediate directional offset.':'Manual scenario: '+optContracts+' contracts × '+number(optMult)+' units per contract. This is a model estimate, not a trade instruction.');
+ setText('kpiUnhedgedPnL',money(unhedged));colorValue(document.getElementById('kpiUnhedgedPnL'),unhedged);
+ setText('kpiOptionPnL',money(optPnL));colorValue(document.getElementById('kpiOptionPnL'),optPnL);setText('kpiOptionCost','Total outlay: $'+number(cost));
+ setText('kpiNetPnL',money(netPnL));colorValue(document.getElementById('kpiNetPnL'),netPnL);
+ const efficiency=unhedged<0?(optPnL>0?optPnL/Math.abs(unhedged)*100:0):100;
+ setText('kpiHedgeEfficiency',efficiency.toFixed(1)+'%');setText('kpiCoveredText',unhedged<0?'Loss mitigation ratio':'Spot position profitable');
+ setText('greekDelta',bsEntry.delta.toFixed(3));setText('greekGamma',bsEntry.gamma.toFixed(6));setText('greekVega','$'+bsEntry.vega.toFixed(4));setText('greekTheta','$'+bsEntry.theta.toFixed(4));setText('netPortfolioDelta',(netDelta>=0?'+':'')+number(netDelta,0));
+ renderPayoffChart(spot,strike,units,optionUnits,exposure,optionType,premium,Tgap,r,sigmaGap);
+ renderSensitivityTable(spot,strike,units,optionUnits,exposure,optionType,premium,Tgap,r,Math.max(.0001,iv/100));
+}
+function renderPayoffChart(spot,strike,units,optionUnits,exposure,type,premium,T,r,sigma){
+ const dark=document.documentElement.dataset.theme==='dark',grid=dark?'#30363d':'#d1d9e0',text=dark?'#8b949e':'#666',panel=dark?'#161b22':'#fff',accent=dark?'#58a6ff':'#004a99';
+ const labels=[],spotData=[],optionData=[],netData=[],steps=40,min=spot*.92,max=spot*1.08;
+ for(let i=0;i<=steps;i++){
+  const p=min+(max-min)*i/steps;labels.push(p.toFixed(2));
+  const s=exposure==='SHORT'?(spot-p)*units:(p-spot)*units,b=blackScholes(type,Math.max(.000001,p),strike,T,r,sigma),o=(b.price-premium)*optionUnits;
+  spotData.push(s);optionData.push(o);netData.push(s+o);
+ }
+ if(chartInstance)chartInstance.destroy();
+ chartInstance=new Chart(document.getElementById('payoffChart'),{type:'line',data:{labels,datasets:[
+  {label:'Unhedged Spot P&L',data:spotData,borderColor:'#d9534f',borderWidth:2,borderDash:[5,4],pointRadius:0},
+  {label:'Option Hedge P&L',data:optionData,borderColor:accent,borderWidth:2,pointRadius:0},
+  {label:'Net Hedged Portfolio P&L',data:netData,borderColor:'#28a745',borderWidth:2.5,pointRadius:0}
+ ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{
+  x:{grid:{color:grid},ticks:{color:text,font:{family:'Arial',size:10},maxTicksLimit:8},title:{display:true,text:'Underlying price at open',color:text}},
+  y:{grid:{color:grid},ticks:{color:text,font:{family:'Consolas',size:10},callback:v=>'$'+(v/1000).toFixed(0)+'k'},title:{display:true,text:'Profit / Loss ($)',color:text}}
+ },plugins:{legend:{display:true,labels:{color:text,font:{family:'Arial',size:10},boxWidth:18}},tooltip:{backgroundColor:panel,titleColor:accent,bodyColor:text,borderColor:grid,borderWidth:1,titleFont:{family:'Consolas'},bodyFont:{family:'Consolas'},callbacks:{label:c=>c.dataset.label+': '+money(c.raw)}}}}});
+}
+function renderSensitivityTable(spot,strike,units,optionUnits,exposure,type,premium,T,r,sigma){
+ const tbody=document.getElementById('sensitivityTableBody');tbody.innerHTML='';
+ [-5,-3,-1,0,1,3,5].forEach(gap=>{
+  const price=spot*(1+gap/100),unhedged=exposure==='SHORT'?(spot-price)*units:(price-spot)*units;
+  const base=blackScholes(type,Math.max(.000001,price),strike,T,r,sigma),baseOpt=(base.price-premium)*optionUnits,netBase=unhedged+baseOpt;
+  const spike=blackScholes(type,Math.max(.000001,price),strike,T,r,sigma*1.2),spikeOpt=(spike.price-premium)*optionUnits,netSpike=unhedged+spikeOpt;
+  const tr=document.createElement('tr'),gapCell=document.createElement('td');
+  gapCell.textContent=(gap>=0?'+':'')+gap+'%';gapCell.className=gap>0?'positive':gap<0?'negative':'';tr.appendChild(gapCell);
+  const priceCell=document.createElement('td');priceCell.textContent='$'+number(price);tr.appendChild(priceCell);
+  [unhedged,baseOpt,netBase,netSpike].forEach(v=>{const td=document.createElement('td');td.className='num '+(v>=0?'positive':'negative');td.textContent=money(v);tr.appendChild(td)});
+  tbody.appendChild(tr);
+ });
+}
+function toggleTheme(){
+ const root=document.documentElement;root.dataset.theme=root.dataset.theme==='dark'?'light':'dark';
+ setText('themeToggle',root.dataset.theme==='dark'?'LIGHT MODE':'DARK MODE');calculateAll();
+}
+window.addEventListener('DOMContentLoaded',calculateAll);
+</script>
+</body>
+</html>
